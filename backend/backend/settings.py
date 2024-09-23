@@ -94,7 +94,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -169,6 +169,16 @@ STATIC_ROOT = "/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+DEFAULT_FROM_EMAIL = "Site Support <dev@rowg.co.ke>"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "www.rowg.co.ke"
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = "dev@rowg.co.ke"
+EMAIL_HOST_PASSWORD = "MP=+mvHYVB,^"
+
 ADMIN_CHARTS_NVD3_JS_PATH = "bow/nvd3/build/nv.d3.js"
 ADMIN_CHARTS_NVD3_CSS_PATH = "bow/nvd3/build/nv.d3.css"
 ADMIN_CHARTS_D3_JS_PATH = "bow/d3/d3.js"
@@ -178,32 +188,51 @@ ADMIN_CHARTS_USE_JSONFIELD = False
 
 # celery settings
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    }
-}
+# CACHES = {
+#    'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': "redis://127.0.0.1:6379/1",
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             'CONNECTION_POOL_KWARGS': {'max_connections': 100},
+#         },
+#         'KEY_PREFIX': 'my_cache_prefix',  # Add a prefix to your cache keys
+#         'TIMEOUT': 300,  # Cache timeout in seconds (adjust as needed)
+#         'VERSION': 1,  # Cache version (change this if you change your cache keys structure)
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             'IGNORE_EXCEPTIONS': True,  # Ignore cache-related exceptions
+#         },
+#     }
+# }
 
-
-# Celery Configuration Options
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Adjust if you're using Docker
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Same as broker
+# Celery settings
+CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"  # Use RabbitMQ as the broker
+CELERY_RESULT_BACKEND = "rpc://"  # Use RabbitMQ to return task results
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Africa/Nairobi"  # Set to your timezone
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 
-CELERY_BEAT_SCHEDULE = {
-    'generate_monthly_bills': {
-        'task': 'base.tasks.generate_monthly_bills',
-        'schedule': 60.0,  # Run every minute for testing
+CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_QUEUES = {
+    "default": {
+        "exchange": "default",
+        "routing_key": "default",
     },
 }
+# CELERY_BEAT_SCHEDULE = {
+#     "generate_monthly_bills": {
+#         "task": "base.tasks.generate_monthly_bills",
+#         "schedule": 60.0,  # Run every minute for testing
+#     },
+#     "task-name": {
+#         "task": "base.tasks.scheduled_task",  # Reference to your task
+#         "schedule": 60.0,  # Daily at noon
+#     },
+# }
 
 
 JAZZMIN_SETTINGS = {

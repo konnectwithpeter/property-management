@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import ReactTimeAgo from "react-time-ago";
+import moment from "moment";
 
 const TenantNotifications = () => {
   // Notifications state with sender and avatar
@@ -109,6 +111,22 @@ const TenantNotifications = () => {
     fetchNotifications();
   }, []);
 
+  const readNotification = async (notification) => {
+    await axios
+      .patch(
+        `/api/notifications/${notification}/`,
+        axiosConfig
+      )
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const formatTimestamp = (timestamp) => moment(timestamp).fromNow();
+
   return (
     <main
       className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 align-center justify-center"
@@ -144,11 +162,10 @@ const TenantNotifications = () => {
               <div
                 key={notification.id}
                 className={`flex items-start p-4 mb-4 rounded-lg cursor-pointer transition-transform transform hover:scale-105 ${
-                  notification.status === "Unread"
-                   && "bg-blue-50 border border-blue-200"
-                   
+                  notification.status === "Unread" &&
+                  "bg-blue-50 border border-blue-200"
                 } shadow-md`}
-                onClick={() => handleNotificationClick(notification.id)}
+                onClick={() => readNotification(notification.id)}
               >
                 <div className="relative flex-shrink-0">
                   <img
@@ -198,7 +215,7 @@ const TenantNotifications = () => {
                     >
                       {notification.notification_type}
                     </Badge>
-                    <span>{notification.date}</span>
+                    <span>{formatTimestamp(notification.date)}</span>
                   </div>
                 </div>
               </div>

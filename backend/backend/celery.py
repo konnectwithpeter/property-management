@@ -1,13 +1,22 @@
-from __future__ import absolute_import, unicode_literals
-import os
 from celery import Celery
+from celery.schedules import crontab
 
-# Set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')  # Make sure 'backend' is your correct project name.
+app = Celery("backend", broker="amqp://guest:guest@rabbitmq//")
 
-app = Celery('backend')
+app.conf.result_backend = "rpc://"
 
-# Load task modules from all registered Django app configs.
-app.config_from_object('django.conf:settings', namespace='CELERY')
-
+app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
+
+
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    from base.tasks import (
+        generate_monthly_bills,
+    )  # Move here
+
+    # sender.add_periodic_task(30.0, test.s('world'), name='test every 30 seconds')crontab(hour=0, minute=0, day_of_month='1')
+
+    sender.add_periodic_task(
+        60.0, generate_monthly_bills.s(), name="generate monthly bills on 1st"
+    )

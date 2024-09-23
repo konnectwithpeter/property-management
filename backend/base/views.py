@@ -2,7 +2,7 @@ from rest_framework import viewsets
 import os
 
 from re import search, sub
-from threading import Timer
+from .tasks import send_email_task , send_password_reset_email # Import your email sending task
 import json
 
 from django.contrib.sites.shortcuts import get_current_site
@@ -37,7 +37,7 @@ import json
 from .models import *
 from .serializers import *
 
-EMAIL_HOST_USER = "Copy Validator <info@copyvalidator.com>"
+EMAIL_HOST_USER = "Rowg Dev <info@rowg.co.ke>"
 
 
 @api_view(["GET", "POST"])
@@ -162,7 +162,7 @@ class ApplicationListCreateView(generics.ListCreateAPIView):
 
 
 # List and create maintenance requests
-@api_view(["GET", "POST","PATCH"])
+@api_view(["GET", "POST", "PATCH"])
 def maintenance_request_view(request):
     if request.method == "GET":
         # Get all maintenance requests for the logged-in tenant
@@ -377,13 +377,21 @@ class NotificationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(notification)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # Mark a notification as 'Read'
-    @action(detail=True, methods=["post"])
-    def mark_as_read(self, request, pk=None):
-        notification = self.get_object()
-        notification.read = True
+
+    def patch(self, request, pk=None):
+        # Get the notification object using the primary key
+        try:
+            notification = self.get_queryset().get(pk=pk)
+        except Notification.DoesNotExist:
+            return Response(
+                {"detail": "Notification not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Update the notification status to read
+        notification.is_read = True  # Assuming you have an 'is_read' field
         notification.save()
-        return Response({"status": "Notification marked as read"})
+
+        return Response({"status": "Notification marked as read"}, status=status.HTTP_200_OK)
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -419,11 +427,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                         if tenant_profile.current_property
                         else None
                     ),
-                    "moved_in": tenant_profile.moved_in.strftime(
-                        "%Y-%m-%d"
-                    ),  # Convert date to string
-                    "billed_amount": tenant_profile.billed_amount,
-                    "paid_amount": tenant_profile.paid_amount,
+                    "moved_in": tenant_profile.moved_in.strftime("%Y-%m-%d"),  # Convert date to string
+                    "billed_amount": float(tenant_profile.billed_amount),  # Convert Decimal to float
+                    "paid_amount": float(tenant_profile.paid_amount),  # Convert Decimal to float
                 }
             except TenantProfile.DoesNotExist:
                 token["tenant_profile"] = None
@@ -437,30 +443,38 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 class RegisterView(generics.GenericAPIView):
     permission_classes = [AllowAny]
-
     serializer_class = RegisterUserSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        email = request.data["email"]
-        first_name = request.data["first_name"]
+        user = serializer.save()  # Save the user instance
 
-        # def new_task(mail):
-        # message = render_to_string(
-        #     'base/welcome_email.html', {'username': first_name})
-        # msg = EmailMessage(
-        #     'Welcome to Copy Validator',
-        #     message,
-        #     EMAIL_HOST_USER,
-        #     [email],
-        # )
-        # msg.content_subtype = "html"
-        # msg.send()
+        email = user.email
 
-        # task = threading.Thread(target=new_task, args=(email,))
-        # task.start()
+        recipient_list = [email]
+
+        # Prepare context for email with only necessary fields
+        context = {
+            "username": user.first_name,
+            "email": user.email,
+            # Add other fields as necessary
+        }
+
+        # Determine user type and set email parameters
+        if user.user_type == "tenant":
+            template_name = "base/tenant_welcome.html"  # Use the template name, not the rendered HTML
+        elif user.user_type == "landlord":
+            template_name = "base/landlord_welcome.html"
+        else:
+            # Handle other user types or errors
+            return Response(
+                {"error": "Invalid user type"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Send email after successful registration
+        send_email_task.delay(recipient_list, template_name, context)
+
         return Response(status=status.HTTP_201_CREATED)
 
 
@@ -476,27 +490,17 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
             user = User.objects.get(email=email)
             uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
             token = PasswordResetTokenGenerator().make_token(user)
-            current_site = get_current_site(request=request).domain
-            # current_site = "localhost:5000"
-            # relativeLink = reverse(
-            #     'password-reset-confirm', kwargs={'uidb64': uidb64, 'token': token})
+
             redirect_url = request.data.get("redirect_url", "")
             reset_url = redirect_url + "uidb64=" + str(uidb64) + "/token=" + str(token)
-
-            # absurl = 'http://localhost:5000/'
-            message = ""
-            # email_body = 'Hello,\nUse link below to reset your password \n' + reset_url
-
-            send_mail(
-                "Password Reset",
-                message,
-                EMAIL_HOST_USER,
-                [email],
-                html_message=render_to_string(
+            
+            html_message=render_to_string(
                     "base/user_reset_password.html", {"reset_url": reset_url}
-                ),
-                fail_silently=False,
-            )
+                )
+            recipient_list = [email]
+            print(recipient_list, reset_url)
+            send_password_reset_email.delay(recipient_list, html_message)
+
 
         return Response(
             {"success": "We have sent you a link to reset your password"},

@@ -1,24 +1,38 @@
-version: '3'
 services:
-  redis:
-    image: "redis:alpine"
+  web:
+    build: .
+    volumes:
+      - .:/app  # Mount the current directory to /app in the container
+    command: python manage.py runserver 0.0.0.0:8000
+    
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - "6379:6379"
+      - "5672:5672"
+      - "15672:15672"
 
   celery:
     build:
       context: .
-    command: celery -A project worker --loglevel=info
+    command: celery -A backend worker --loglevel=info
     depends_on:
-      - redis
+      - rabbitmq
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings  # Replace with your actual settings module
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq//
+      - CELERY_RESULT_BACKEND=rpc://
     volumes:
-      - .:/code
+      - .:/app
 
   celery_beat:
     build:
       context: .
-    command: celery -A project beat --loglevel=info
+    command: celery -A backend beat --loglevel=info
     depends_on:
-      - redis
+      - rabbitmq
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings  # Replace with your actual settings module
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq//
+      - CELERY_RESULT_BACKEND=rpc://
     volumes:
-      - .:/code
+      - .:/app

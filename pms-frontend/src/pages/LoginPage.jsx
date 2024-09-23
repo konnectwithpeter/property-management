@@ -37,7 +37,7 @@ export default function LoginForm() {
   const [notification, setNotification] = useState(""); // Notification state
 
   const { loginUser, loginError } = useContext(AuthContext);
-  const { API_URL } = useContext(APIContext);
+  const { API_URL,BASE_URL } = useContext(APIContext);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -81,7 +81,7 @@ export default function LoginForm() {
     try {
       await axios.post(`${API_URL}api/request-reset-email/`, {
         email: resetEmail,
-        redirect_url: `${API_URL}reset-password/`,
+        redirect_url: `${BASE_URL}reset-password/`,
       });
       setResetDialogOpen(false); // Close dialog
       setNotification(
@@ -122,7 +122,10 @@ export default function LoginForm() {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                <Dialog
+                  open={resetDialogOpen}
+                  onOpenChange={setResetDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <Link className="ml-auto inline-block text-sm underline">
                       Forgot your password?

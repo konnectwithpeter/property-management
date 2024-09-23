@@ -189,17 +189,29 @@ const Navbar = ({ setActivePage, activePage }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
-            <Avatar>
-      <AvatarImage src={`http://127.0.0.1:8000${user.profile_picture}`} alt="RC" />
-      <AvatarFallback>RC</AvatarFallback>
-    </Avatar>
+              <Avatar>
+                <AvatarImage
+                  src={`http://127.0.0.1:8000${user.profile_picture}`}
+                  alt="RC"
+                />
+                <AvatarFallback>RC</AvatarFallback>
+              </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            {user.tenant_profile === null ? (
+              <DropdownMenuItem onClick={() => setActivePage("properties")}>
+                Properties
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => setActivePage("overview")}>
+                Overview
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuItem onClick={() => setActivePage("notifications")}>
               Notifications
             </DropdownMenuItem>

@@ -12,6 +12,7 @@ import AuthContext, { AuthProvider } from "./context/AuthContext";
 import PublicLogin from "./context/PublicLogin";
 import PrivateRoute from "./context/PrivateRoute";
 import { useContext } from "react";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 function AppRouter() {
   return (
@@ -24,6 +25,10 @@ function AppRouter() {
             <Route element={<PublicLogin />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route
+                path={"/reset-password/:id/:id"}
+                element={<ChangePasswordPage />}
+              />
             </Route>
             <Route element={<PrivateRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
