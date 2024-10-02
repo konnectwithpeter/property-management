@@ -45,23 +45,25 @@ const Navbar = ({ setActivePage, activePage }) => {
           <Package2 className="h-6 w-6" />
           <span className="sr-only">Heri Homes</span>
         </Link>
-        {["overview", "maintenance", "notifications"].map((page) => (
-          <Link
-            key={page}
-            to="#"
-            onClick={(e) => {
-              e.preventDefault();
-              setActivePage(page);
-            }}
-            className={`${
-              activePage === page
-                ? "text-blue-600 font-bold"
-                : "text-gray-600 hover:text-blue-600"
-            } transition-colors`}
-          >
-            {page.charAt(0).toUpperCase() + page.slice(1)}
-          </Link>
-        ))}
+        {["overview", "properties", "maintenance", "notifications"].map(
+          (page) => (
+            <Link
+              key={page}
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActivePage(page);
+              }}
+              className={`${
+                activePage === page
+                  ? "text-blue-600 font-bold"
+                  : "text-gray-600 hover:text-blue-600"
+              } transition-colors`}
+            >
+              {page.charAt(0).toUpperCase() + page.slice(1)}
+            </Link>
+          )
+        )}
       </nav>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
@@ -133,9 +135,7 @@ const Navbar = ({ setActivePage, activePage }) => {
             <DropdownMenuItem onClick={() => setActivePage("notifications")}>
               Notifications
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActivePage("vacate")}>
-              Vacate
-            </DropdownMenuItem>
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logoutUser}>Logout</DropdownMenuItem>
           </DropdownMenuContent>

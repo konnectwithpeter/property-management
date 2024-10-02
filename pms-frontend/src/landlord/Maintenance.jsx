@@ -48,12 +48,9 @@ const Maintenance = ({ maintenanceRequests, axiosConfig }) => {
 
   // Render the list of maintenance requests
   return (
-    <main
-      className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8"
-      style={{ width: "100%", minWidth: "94.5vw" }}
-    >
+    <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
-        {maintenanceRequests.map((request,index) => (
+        {maintenanceRequests.map((request, index) => (
           <Card key={request.id} className="p-2 ">
             <CardContent className="flex flex-col ">
               <div className="flex justify-between">
@@ -123,14 +120,20 @@ const Maintenance = ({ maintenanceRequests, axiosConfig }) => {
                   <Input
                     type="number"
                     value={budgets[request.index] || ""} // Track budget specific to each request
-                    onChange={(e) => handleBudgetChange(request.id, e.target.value)}
+                    onChange={(e) =>
+                      handleBudgetChange(request.id, e.target.value)
+                    }
                     placeholder="Enter budget"
                   />
                 </div>
                 {/* Approve button */}
                 <Button
                   onClick={() =>
-                    handleApprove(request.property, request.tenant, budgets[request.id])
+                    handleApprove(
+                      request.property,
+                      request.tenant,
+                      budgets[request.id]
+                    )
                   }
                   className="mt-4"
                 >
@@ -141,7 +144,7 @@ const Maintenance = ({ maintenanceRequests, axiosConfig }) => {
           </Card>
         ))}
       </div>
-    </main>
+    </>
   );
 };
 

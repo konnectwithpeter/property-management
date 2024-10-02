@@ -41,7 +41,7 @@ const VacateNoticeForm = () => {
   };
 
   return (
-    <div className="w-full mx-auto p-6  rounded-lg ">
+    <div className="w-full mx-auto p-6  rounded-lg   bg-white shadow-lg ">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="vacate_date">Vacate Date</Label>

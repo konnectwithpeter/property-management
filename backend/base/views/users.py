@@ -45,8 +45,6 @@ from base.serializers import *
 EMAIL_HOST_USER = "Rowg Dev <info@rowg.co.ke>"
 
 
-
-
 @api_view(["GET", "POST"])
 @parser_classes([MultiPartParser, FormParser])  # To handle file uploads
 def property_list_create(request):
@@ -108,8 +106,6 @@ def property_list_create(request):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 # View to update request status
 @api_view(["PATCH"])
 def update_maintenance_status(request, pk):
@@ -131,9 +127,6 @@ def update_maintenance_status(request, pk):
     return Response(
         {"message": "Status updated successfully"}, status=status.HTTP_200_OK
     )
-
-
-
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -301,7 +294,6 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
                 "base/user_reset_password.html", {"reset_url": reset_url}
             )
             recipient_list = [email]
-            print(recipient_list, reset_url)
             send_password_reset_email.delay(recipient_list, html_message)
 
         return Response(

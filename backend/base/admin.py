@@ -8,6 +8,26 @@ from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 
 
+from django_celery_results.models import TaskResult, GroupResult
+from django_celery_beat.models import (
+    ClockedSchedule,
+    CrontabSchedule,
+    IntervalSchedule,
+    SolarSchedule,
+    PeriodicTask,
+)
+
+# Unregister django_celery_beat models
+admin.site.unregister(ClockedSchedule)
+admin.site.unregister(CrontabSchedule)
+admin.site.unregister(IntervalSchedule)
+admin.site.unregister(SolarSchedule)
+admin.site.unregister(PeriodicTask)
+
+# Unregister django_celery_results models
+admin.site.unregister(TaskResult)
+admin.site.unregister(GroupResult)
+
 admin.site.unregister(Group)
 
 from django.contrib import admin
@@ -30,39 +50,48 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 
-class CustomAdminSite(AdminSite):
-    site_header = "My Custom Admin"
-
-    def index(self, request, extra_context=None):
-        # Prepare data for the admin index view
-        app_list = self.get_app_list(request)
-        for app in app_list:
-            for model in app["models"]:
-                # Add the object count to each model
-                model["object_count"] = model["model"].objects.count()
-
-        return super().index(request, extra_context={"app_list": app_list})
 
 
-admin_site = CustomAdminSite()
 
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from .models import User
+from django.utils.translation import gettext_lazy as _
 
-# User Admin
-class UserAdmin(admin.ModelAdmin):
-    list_display = (
-        "email",
-        "first_name",
-        "last_name",
-        "user_type",
-        "is_active",
-        "is_staff",
-    )
+class UserAdmin(BaseUserAdmin):
+    # Specify fields to display in the user list view
+    list_display = ("email", "first_name", "last_name", "user_type", "is_active", "is_staff")
     list_filter = ("user_type", "is_active", "is_staff")
+
+    # Enable search by email, first name, and last name
     search_fields = ("email", "first_name", "last_name")
+
+    # Define the form layout using fieldsets
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        (_("Personal Info"), {"fields": ("first_name", "last_name", "phone", "profile_picture")}),
+        (_("Permissions"), {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        (_("User Type"), {"fields": ("user_type",)}),
+        (_("Important dates"), {"fields": ("last_login",)}),
+    )
+
+    # Fieldsets for the form used when creating a new user
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("email", "first_name", "last_name", "user_type", "password1", "password2"),
+        }),
+    )
+
     ordering = ("email",)
 
+    # Enable filter horizontal for groups and user permissions
+    filter_horizontal = ("groups", "user_permissions")
 
+
+# Register the custom User admin
 admin.site.register(User, UserAdmin)
+
 
 
 # Water Price Admin
@@ -74,8 +103,10 @@ class WaterPriceAdmin(admin.ModelAdmin):
 
 admin.site.register(WaterPrice, WaterPriceAdmin)
 
+from django.contrib import admin
+from django.utils.html import format_html
+from .models import Property
 
-# Property Admin
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
     list_display = (
@@ -102,6 +133,7 @@ class PropertyAdmin(admin.ModelAdmin):
                     "description",
                     "rent_price",
                     "available",
+                    "image1",  # Make the image field editable
                     "view_image",  # To display the image as a card
                 )
             },
@@ -140,6 +172,7 @@ class PropertyAdmin(admin.ModelAdmin):
         return "No image available"
 
     view_image.short_description = "Property Image"
+
 
 
 @admin.register(WaterMeterReading)

@@ -1,0 +1,104 @@
+/* Define keyframes for lively gradient animation */
+@keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+}
+  /* Set a default gradient background for the body */
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(270deg, #F2F2F2, #0A8537);
+    background-size: 400% 400%; /* Ensure smooth animation */
+    animation: gradientAnimation 15s ease infinite; /* Adjust duration for speed */
+  }
+  
+  /* Card Styles */
+  .card {
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    color: #fff; /* Set default text color to white */
+  }
+  
+  /* Specific card styles for different gradients */
+  .card.pending-payments {
+    background: linear-gradient(270deg, #FF5F6D, #FFC371);
+    animation: gradientAnimation 15s ease infinite;
+  }
+  
+  .card.water-bill {
+    background: linear-gradient(270deg, #FF6A00, #FFB300);
+    animation: gradientAnimation 15s ease infinite;
+  }
+  
+  .card.this-month {
+    background: linear-gradient(270deg, #56AB2F, #A8E063);
+    animation: gradientAnimation 15s ease infinite;
+  }
+  
+  /* Additional styles */
+  .card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .card-description {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .card-footer {
+    margin-top: 15px;
+  }
+  
+  /* Table Styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 10px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Button Styles */
+  button {
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .card {
+      padding: 15px;
+    }
+  }
+  

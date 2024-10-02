@@ -1,19 +1,24 @@
-import { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AuthContext from "../context/AuthContext";
-import BufferPage from "../pages/BufferPage";
+
+const Skeleton = ({ className }) => (
+  <div className={`bg-gray-300 animate-pulse ${className}`} />
+);
+
+
 
 const MaintenanceRequestList = ({
   fetchMaintenanceRequests,
   requests,
   loading,
+  error,
 }) => {
   // Fetch maintenance requests from the API
   useEffect(() => {
     fetchMaintenanceRequests();
-  }, []);
+  }, [fetchMaintenanceRequests]);
 
   // Display status with corresponding badges
   const getStatusBadge = (status) => {
@@ -30,17 +35,51 @@ const MaintenanceRequestList = ({
     }
   };
 
-
   return (
     <>
-      {requests.length < 1 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="p-4 h-full">
+              <CardContent className="flex flex-col h-full">
+                <Skeleton className="h-6 mb-2" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <Skeleton className="h-4 mt-2" />
+                <Skeleton className="h-4 mt-2" />
+                <div className="mt-2">
+                  <strong>Images:</strong>
+                  <div className="flex gap-2 mt-2">
+                    <Skeleton className="h-20 w-20 rounded-md" />
+                    <Skeleton className="h-20 w-20 rounded-md" />
+                    <Skeleton className="h-20 w-20 rounded-md" />
+                  </div>
+                  <div className="mt-2">
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-1 items-center justify-center h-full">
+          <p className="text-red-500">Failed to load maintenance requests.</p>
+        </div>
+      ) : requests.length < 1 ? (
         <div
           className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm h-full"
           style={{ minHeight: "60vh" }}
         >
           <div className="flex flex-col items-center gap-1 text-center">
             <h3 className="text-2xl font-bold tracking-tight">
-              You have no maintenance request
+              You have no maintenance requests
             </h3>
             <p className="text-sm text-muted-foreground">
               Maintenance requests will be listed here.
@@ -49,8 +88,8 @@ const MaintenanceRequestList = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
-          {requests.map((request) => (
-            <Card key={request.id} className="p-2 h-full max-h-fit">
+          {requests.map((request, index) => (
+            <Card key={index} className="p-4 h-full">
               <CardContent className="flex flex-col h-full">
                 <div className="flex justify-between">
                   <p className="text-lg font-bold">Maintenance Request</p>
@@ -68,7 +107,7 @@ const MaintenanceRequestList = ({
                   <strong>Description:</strong> {request.description}
                 </p>
                 <p className="text-sm mt-2">
-                  <strong>Submitted On:</strong>
+                  <strong>Submitted On:</strong>{" "}
                   {new Date(request.created_at).toLocaleDateString()}
                 </p>
 
@@ -79,26 +118,26 @@ const MaintenanceRequestList = ({
                     {request.image1 && (
                       <img
                         src={`http://127.0.0.1:8000${request.image1}`}
-                        alt={`Maintenance request image 1`}
-                        className="w-20 h-20 object-cover"
+                        alt="Maintenance request image 1"
+                        className="w-20 h-20 object-cover rounded-md"
                       />
                     )}
                     {request.image2 && (
                       <img
                         src={`http://127.0.0.1:8000${request.image2}`}
-                        alt={`Maintenance request image 2`}
-                        className="w-20 h-20 object-cover"
+                        alt="Maintenance request image 2"
+                        className="w-20 h-20 object-cover rounded-md"
                       />
                     )}
                     {request.image3 && (
                       <img
                         src={`http://127.0.0.1:8000${request.image3}`}
-                        alt={`Maintenance request image 3`}
-                        className="w-20 h-20 object-cover "
+                        alt="Maintenance request image 3"
+                        className="w-20 h-20 object-cover rounded-md"
                       />
                     )}
-                  </div>{" "}
-                  {request.video !== null && (
+                  </div>
+                  {request.video && (
                     <div className="mt-2">
                       <strong>Video:</strong>
                       <video

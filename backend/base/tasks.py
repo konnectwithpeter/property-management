@@ -19,13 +19,12 @@ from base.models import (
 )
 from django.core.files.base import ContentFile
 from datetime import datetime
-import asyncio
 
 
 User = get_user_model()  # Use get_user_model() to fetch the User model
 
 
-
+@shared_task
 def send_email_task(recipient_list, template_name, context):
     """
     Task to send an email asynchronously.
@@ -73,8 +72,8 @@ def send_password_reset_email(recipient_list, html_message):
         print(f"Error sending email: {e}")
 
 
-
-async def generate_invoice(tenant_id, previous_reading, current_reading, reading_date):
+@shared_task
+def generate_invoice(tenant_id, previous_reading, current_reading, reading_date):
     print("Generating invoice...")
 
     try:

@@ -106,7 +106,7 @@ class UserSerializer(serializers.ModelSerializer):
 class PropertySerializer(serializers.ModelSerializer):
     class Meta:
         model = Property
-        fields = ["id", "location", "block", "house", "rent_price"]
+        fields = "__all__"
 
 
 class TenantProfileSerializer(serializers.ModelSerializer):
@@ -188,9 +188,7 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
 class PropertyAdminSerializer(serializers.ModelSerializer):
     landlord = serializers.SerializerMethodField()
     tenants = TenantProfileSerializer(many=True, read_only=True)
-    invoices = RentInvoiceSerializer(
-        many=True, read_only=True
-    )  # Now using the updated RentInvoiceSerializer
+    invoices = RentInvoiceSerializer(many=True, read_only=True)
     maintenances = MaintenanceRequestSerializer(many=True, read_only=True)
 
     class Meta:
@@ -199,6 +197,7 @@ class PropertyAdminSerializer(serializers.ModelSerializer):
             "id",
             "house",
             "block",
+            "image1",
             "location",
             "landlord",
             "tenants",
