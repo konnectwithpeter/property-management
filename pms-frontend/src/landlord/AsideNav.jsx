@@ -7,6 +7,7 @@ import {
   Package2,
   Settings,
   Users2,
+  Workflow,
 } from "lucide-react";
 
 import {
@@ -84,7 +85,7 @@ const AsideNav = ({ setActivePage }) => {
                 }}
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
-                <Building className="h-5 w-5" />
+                <Workflow className="h-5 w-5" />
                 <span className="sr-only">Maintenance</span>
               </Link>
             </TooltipTrigger>

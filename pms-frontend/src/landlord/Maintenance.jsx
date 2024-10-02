@@ -52,10 +52,10 @@ const Maintenance = ({ maintenanceRequests, axiosConfig }) => {
       className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8"
       style={{ width: "100%", minWidth: "94.5vw" }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
         {maintenanceRequests.map((request,index) => (
-          <Card key={request.id} className="p-2 h-full max-h-fit">
-            <CardContent className="flex flex-col h-full">
+          <Card key={request.id} className="p-2 ">
+            <CardContent className="flex flex-col ">
               <div className="flex justify-between">
                 <p className="text-lg font-bold">{request.property_name}</p>
                 {getStatusBadge(request.status)}

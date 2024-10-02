@@ -186,10 +186,10 @@ export default function Listing({ setActivePage, properties, fetchData }) {
                         <TableCell className="font-medium">
                           <div className="grid gap-1">
                             <p className="text-sm font-medium leading-none">
-                              {property.property.title}
+                              {property.property.location}
                             </p>
                             <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <MapPin /> {property.property.address}
+                              <MapPin /> {property.property.block}, {property.property.house}
                             </p>
                           </div>
                         </TableCell>
@@ -202,9 +202,7 @@ export default function Listing({ setActivePage, properties, fetchData }) {
                             >
                               Vacant
                             </Badge>
-                            <div className=" font-medium">
-                              {property.applications.length} Applicants
-                            </div>
+                           
                           </TableCell>
                         ) : (
                           <TableCell>
@@ -261,15 +259,18 @@ export default function Listing({ setActivePage, properties, fetchData }) {
                                 variant="outline"
                                 style={{ maxWidth: "fit-content" }}
                               >
+                                {console.log(property.tenant_profile)}
                                 {property.tenant_profile.paid ==
-                                property.tenant_profile.billed
+                                property.tenant_profile.billed_amount
                                   ? "Paid"
                                   : "Pending"}
                               </Badge>
                             )}
 
                             <div className="font-medium">
-                              ${property.property.rent_price}
+                              {property.tenant_profile !== null
+                                ? `$${property.tenant_profile.billed_amount}`
+                                : `$${property.property.rent_price}`}
                             </div>
                           </div>
                         </TableCell>

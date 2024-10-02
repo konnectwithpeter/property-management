@@ -1,0 +1,5 @@
+/* Hide the email under the user info in the sidebar */
+.user-panel .info .d-block {
+    display: none !important;
+    border: 1px solid green
+}

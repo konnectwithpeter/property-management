@@ -1,91 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
-import ReactTimeAgo from "react-time-ago";
 import moment from "moment";
+import { Button } from "@/components/ui/button";
 
 const TenantNotifications = () => {
-  // Notifications state with sender and avatar
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Rent Payment Reminder",
-      message:
-        "Your monthly rent is due on the 1st of September. Please ensure payment to avoid late fees.",
-      date: "2024-09-01",
-      status: "Unread",
-      type: "Reminder",
-      sender: "Property Management",
-      avatar:
-        "https://images.pexels.com/photos/1933873/pexels-photo-1933873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    },
-    {
-      id: 2,
-      title: "Maintenance Request Update",
-      message:
-        "Your maintenance request for plumbing has been approved and scheduled for 5th September.",
-      date: "2024-08-28",
-      status: "Read",
-      type: "Info",
-      sender: "Maintenance Team",
-      avatar:
-        "https://images.pexels.com/photos/1933873/pexels-photo-1933873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    },
-    {
-      id: 3,
-      title: "Late Rent Payment Warning",
-      message:
-        "Your rent payment is overdue by 7 days. Please pay immediately to avoid legal action.",
-      date: "2024-08-15",
-      status: "Unread",
-      type: "Warning",
-      sender: "Finance Department",
-      avatar:
-        "https://images.pexels.com/photos/1933873/pexels-photo-1933873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    },
-  ]);
-
-  // State to handle the active tab
+  const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
-
-  // Function to filter notifications based on the selected tab
-  const filterNotifications = () => {
-    const today = new Date();
-    const startOfWeek = new Date(
-      today.setDate(today.getDate() - today.getDay())
-    );
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-    return notifications.filter((notification) => {
-      const notificationDate = new Date(notification.date);
-
-      switch (activeTab) {
-        case "This Week":
-          return notificationDate >= startOfWeek;
-        case "This Month":
-          return notificationDate >= startOfMonth;
-        default:
-          return true; // "All" notifications
-      }
-    });
-  };
-
-  // Handle notification click (set status to 'Read')
-  const handleNotificationClick = (id) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) =>
-        notification.id === id
-          ? { ...notification, status: "Read" }
-          : notification
-      )
-    );
-  };
-
   const [notices, setNotices] = useState([]);
-
   let { authTokens } = useContext(AuthContext);
 
   let axiosConfig = {
@@ -114,11 +38,12 @@ const TenantNotifications = () => {
   const readNotification = async (notification) => {
     await axios
       .patch(
-        `/api/notifications/${notification}/`,
+        `http://127.0.0.1:8000/api/notifications-edit/`,
+        { notification },
         axiosConfig
       )
       .then((response) => {
-        console.log(response);
+        fetchNotifications();
       })
       .catch((error) => {
         console.log(error);
@@ -128,24 +53,16 @@ const TenantNotifications = () => {
   const formatTimestamp = (timestamp) => moment(timestamp).fromNow();
 
   return (
-    <main
-      className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 align-center justify-center"
-      style={{ minWidth: "98.5vw", width: "100%", padding: "1rem" }}
-    >
-      <Card
-        className="shadow-xl rounded-xl overflow-hidden"
-        style={{ maxWidth: "40rem", margin: "auto" }}
-      >
+    <>
+      <Card className=" overflow-hidden w-full md:w-3/4 mx-auto">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold p-4">
-            Notifications
-          </CardTitle>
+          <CardTitle className="text-3xl font-bold p-4">Notifications</CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="mb-4 flex  border-gray-200 gap-4">
+          <div className="mb-4 flex border-gray-200 gap-4">
             {["All", "This Week", "This Month"].map((tab) => (
-              <button
-                key={tab}
+              <Button
+              variant="outline"
                 className={`px-4 py-2 font-semibold text-sm ${
                   activeTab === tab
                     ? "text-blue-600 border-b-2 border-blue-600"
@@ -154,7 +71,7 @@ const TenantNotifications = () => {
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}
-              </button>
+              </Button>
             ))}
           </div>
           {notices.length > 0 ? (
@@ -162,7 +79,7 @@ const TenantNotifications = () => {
               <div
                 key={notification.id}
                 className={`flex items-start p-4 mb-4 rounded-lg cursor-pointer transition-transform transform hover:scale-105 ${
-                  notification.status === "Unread" &&
+                  notification.read === true &&
                   "bg-blue-50 border border-blue-200"
                 } shadow-md`}
                 onClick={() => readNotification(notification.id)}
@@ -188,7 +105,7 @@ const TenantNotifications = () => {
                       </h3>
                       <Badge
                         className={`${
-                          notification.status === false
+                          notification.read === false
                             ? "text-white bg-blue-600"
                             : "text-gray-600 bg-gray-200"
                         }`}
@@ -227,7 +144,7 @@ const TenantNotifications = () => {
           )}
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 };
 

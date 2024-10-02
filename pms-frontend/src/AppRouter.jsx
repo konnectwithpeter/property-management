@@ -20,8 +20,6 @@ function AppRouter() {
       <APIProvider>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-
             <Route element={<PublicLogin />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -31,7 +29,7 @@ function AppRouter() {
               />
             </Route>
             <Route element={<PrivateRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/" element={<Dashboard />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

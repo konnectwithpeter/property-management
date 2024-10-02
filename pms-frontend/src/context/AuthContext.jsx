@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         setUser(jwtDecode(data.access));
         localStorage.setItem("authTokens", JSON.stringify(data));
         setLoggedIn(true);
-        navigate("/dashboard");
+        navigate("/");
       } else {
         console.log("failed to login");
       }
@@ -126,6 +126,7 @@ export const AuthProvider = ({ children }) => {
     loginUser: loginUser,
     setLoginError: setLoginError,
     logoutUser: logoutUser,
+    updateToken:updateToken,
   };
   return (
     <AuthContext.Provider value={contextData}>

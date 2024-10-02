@@ -21,7 +21,7 @@ import { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import MaintenanceRequestList from "./MaintenanceRequestList";
 
-const Maintenance = () => {
+const Maintenance = ({ currentProperty }) => {
   const [description, setDescription] = useState("");
   const [images, setImages] = useState([]);
   const [video, setVideo] = useState(null);
@@ -70,7 +70,7 @@ const Maintenance = () => {
     formData.append("description", description);
     formData.append("maintenance_type", maintenanceType);
     formData.append("severity", severity);
-    formData.append("property_id", user.tenant_profile.current_property);
+    formData.append("property_id", currentProperty.id);
 
     images.forEach((image, index) => {
       formData.append(`image_${index}`, image);
@@ -107,7 +107,6 @@ const Maintenance = () => {
     }
   };
 
-
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,7 +123,6 @@ const Maintenance = () => {
         axiosConfig
       );
       setRequests(response.data); // Access the 'results' array from the paginated response
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
     } finally {
@@ -133,14 +131,11 @@ const Maintenance = () => {
   };
 
   return (
-    <main
-      className="flex flex-1 w-full flex-col gap-4 p-0 md:gap-8 md:p-0"
-      style={{ minWidth: "98.5vw", width: "100%", padding: "1rem" }}
-    >
+    <>
       <div className="flex ml-auto">
         <Dialog>
           <DialogTrigger asChild>
-            <Button >Submit a Request</Button>
+            <Button>Submit a Request</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[80vh] overflow-y-auto">
             <DialogHeader>
@@ -241,12 +236,14 @@ const Maintenance = () => {
           </DialogContent>
         </Dialog>
       </div>
-      <MaintenanceRequestList
-        fetchMaintenanceRequests={fetchMaintenanceRequests}
-        requests={requests}
-        loading={loading}
-      />
-    </main>
+      <div>
+        <MaintenanceRequestList
+          fetchMaintenanceRequests={fetchMaintenanceRequests}
+          requests={requests}
+          loading={loading}
+        />
+      </div>
+    </>
   );
 };
 

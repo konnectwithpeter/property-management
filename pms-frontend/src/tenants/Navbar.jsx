@@ -1,5 +1,5 @@
-import { CircleUser, Menu, Package2, Search } from "lucide-react";
-
+import { Menu, Package2 } from "lucide-react"; 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,17 +9,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ModeToggle } from "../components/ModeToggle";
-import { useContext } from "react";
 import AuthContext from "../context/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = ({ setActivePage, activePage }) => {
   const navigate = useNavigate();
   const { logoutUser, user } = useContext(AuthContext);
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // Manage sheet open state
+
+  const handleLinkClick = (page) => {
+    setActivePage(page); // Set the active page
+    setIsSheetOpen(false); // Close the sheet after clicking a link
+  };
 
   return (
     <header
@@ -36,7 +40,7 @@ const Navbar = ({ setActivePage, activePage }) => {
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
           <Package2 className="h-6 w-6" />
-          <span className="sr-only">Acme Inc</span>
+          <span className="sr-only">Heri Homes</span>
         </Link>
         <Link
           to="#"
@@ -52,66 +56,21 @@ const Navbar = ({ setActivePage, activePage }) => {
         >
           Dashboard
         </Link>
-        {user.tenant_profile === null && (
-          <>
-            <Link
-              to="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setActivePage("properties");
-              }}
-              className={
-                activePage === "properties"
-                  ? "text-foreground transition-colors hover:text-foreground"
-                  : "text-muted-foreground transition-colors hover:text-foreground"
-              }
-            >
-              Properties
-            </Link>
-            <Link
-              to="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setActivePage("applications");
-              }}
-              className={
-                activePage === "applications"
-                  ? "text-foreground transition-colors hover:text-foreground"
-                  : "text-muted-foreground transition-colors hover:text-foreground"
-              }
-            >
-              Applications
-            </Link>
-          </>
-        )}
-        {user.tenant_profile !== null && (
-          <>
-            <Link
-              to="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setActivePage("maintenance");
-              }}
-              className={
-                activePage === "maintenace"
-                  ? "text-foreground transition-colors hover:text-foreground"
-                  : "text-muted-foreground transition-colors hover:text-foreground"
-              }
-            >
-              Maintenance
-            </Link>
-            <Link
-              to="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setActivePage("info");
-              }}
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Analytics
-            </Link>
-          </>
-        )}
+
+        <Link
+          to="#"
+          onClick={(e) => {
+            e.preventDefault();
+            setActivePage("maintenance");
+          }}
+          className={
+            activePage === "maintenace"
+              ? "text-foreground transition-colors hover:text-foreground"
+              : "text-muted-foreground transition-colors hover:text-foreground"
+          }
+        >
+          Maintenance
+        </Link>
 
         <Link
           to="#"
@@ -128,9 +87,9 @@ const Navbar = ({ setActivePage, activePage }) => {
           Notifications
         </Link>
       </nav>
-      <Sheet>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+          <Button variant="outline" size="small" className="shrink-0 md:hidden">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
@@ -140,51 +99,53 @@ const Navbar = ({ setActivePage, activePage }) => {
             <Link
               href="#"
               className="flex items-center gap-2 text-lg font-semibold"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLinkClick("overview");
+              }}
             >
               <Package2 className="h-6 w-6" />
-              <span className="sr-only">Acme Inc</span>
+              <span className="sr-only">Heri Homes</span>
             </Link>
-            <Link href="#" className="hover:text-foreground">
+            <Link
+              href="#"
+              className="hover:text-foreground"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLinkClick("overview");
+              }}
+            >
               Dashboard
             </Link>
             <Link
               href="#"
               className="text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLinkClick("maintenance");
+              }}
             >
-              Orders
+              Maintenance
             </Link>
             <Link
               href="#"
               className="text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLinkClick("notifications");
+              }}
             >
-              Products
-            </Link>
-            <Link
-              href="#"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Customers
-            </Link>
-            <Link
-              href="#"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Analytics
+              Notifications
             </Link>
           </nav>
         </SheetContent>
       </Sheet>
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-        <form className="ml-auto flex-1 sm:flex-initial">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search products..."
-              className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
-            />
-          </div>
-        </form>
+        <div className="ml-auto flex-1 sm:flex-initial">
+          <span className="text-muted-foreground">
+            Hello, {user.first_name}
+          </span>
+        </div>
         <ModeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -194,7 +155,10 @@ const Navbar = ({ setActivePage, activePage }) => {
                   src={`http://127.0.0.1:8000${user.profile_picture}`}
                   alt="RC"
                 />
-                <AvatarFallback>RC</AvatarFallback>
+                <AvatarFallback>
+                  {user.first_name[0]}
+                  {user.last_name[0]}
+                </AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
@@ -215,6 +179,10 @@ const Navbar = ({ setActivePage, activePage }) => {
             <DropdownMenuItem onClick={() => setActivePage("notifications")}>
               Notifications
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActivePage("vacate")}>
+              Vacate
+            </DropdownMenuItem>
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logoutUser()}>
               Logout

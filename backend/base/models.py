@@ -9,6 +9,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.files.base import ContentFile
+from django.core.exceptions import ValidationError
 
 
 class CustomUserManager(BaseUserManager):
@@ -62,8 +64,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True, null=True)
     last_name = models.CharField(max_length=30, blank=True, null=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
     profile_picture = models.ImageField(
-        upload_to="profile_pics/", blank=True, null=True
+        upload_to="static/profile_pics/", blank=True, null=True
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
 
@@ -79,125 +82,296 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+class WaterPrice(models.Model):
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    effective_date = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.price_per_unit} effective from {self.effective_date}"
+
+
 class Property(models.Model):
     landlord = models.ForeignKey(
         User, on_delete=models.CASCADE, limit_choices_to={"user_type": "landlord"}
     )
-    title = models.CharField(max_length=255)
-    image1 = models.ImageField(upload_to="property_images/", null=True, blank=True)
-    image2 = models.ImageField(upload_to="property_images/", null=True, blank=True)
-    image3 = models.ImageField(upload_to="property_images/", null=True, blank=True)
+
+    image1 = models.ImageField(
+        upload_to="static/property_images/", null=True, blank=True
+    )
+
+    # New fields for location, block, and house number
+    location = models.CharField(max_length=100, blank=True, null=True)
+    block = models.CharField(max_length=10, blank=True, null=True)  # E.g., "3F"
+    house = models.CharField(max_length=10, blank=True, null=True)  # E.g., "F012"
+
+    water_price = models.ForeignKey(
+        WaterPrice, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
     description = models.TextField()
     bathrooms = models.IntegerField(default=1)
     bedrooms = models.IntegerField(default=1)
     parking = models.IntegerField(default=1)
-    address = models.CharField(max_length=255)
     rent_price = models.DecimalField(max_digits=10, decimal_places=2)
     available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.house}  {self.block} {self.location}"
 
     class Meta:
         verbose_name = "Property"
         verbose_name_plural = "Properties"
 
 
-class PropertyFile(models.Model):
+class WaterMeterReading(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
-    file = models.FileField(upload_to="property-documents/")
+    previous_reading = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    current_reading = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    reading_date = models.DateField(auto_now_add=True)
+
+    def units_used(self):
+        return max(0, self.current_reading - self.previous_reading)
+
+    def water_bill(self):
+        price_per_unit = (
+            self.property.water_price.price_per_unit if self.property.water_price else 0
+        )
+        return self.units_used() * price_per_unit
+
+    def clean(self):
+        """
+        Custom validation to prevent saving if current reading is less than previous reading.
+        """
+        # Check if the instance exists (i.e., it's an update)
+        if self.pk is not None:
+            old_instance = WaterMeterReading.objects.get(pk=self.pk)
+            previous_reading = old_instance.current_reading
+        else:
+            previous_reading = self.previous_reading
+
+        if self.current_reading < previous_reading:
+            raise ValidationError(
+                {
+                    "current_reading": "Current reading must be greater than or equal to the previous reading."
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        # Perform validation (this will call the clean method)
+        self.full_clean()  # This calls the clean method
+
+        # Set the previous reading only if this is an update
+        if self.pk is not None:  # Check if this is an update
+            old_instance = WaterMeterReading.objects.get(pk=self.pk)
+            self.previous_reading = old_instance.current_reading
+
+        # Call the original save method
+        super().save(*args, **kwargs)
+
+        # Update the corresponding TenantProfile if needed
+        if self.current_reading >= self.previous_reading:
+            bill_amount = self.water_bill()
+            tenant_profile = TenantProfile.objects.filter(
+                property=self.property
+            ).first()
+            if tenant_profile:
+                tenant_profile.water_bill = bill_amount
+                tenant_profile.total_monthly_bill = (
+                    bill_amount
+                    + tenant_profile.property.rent_price
+                    + tenant_profile.arrears
+                )
+                tenant_profile.total_billed = (
+                    tenant_profile.total_billed
+                    + bill_amount
+                    + tenant_profile.property.rent_price
+                )
+                tenant_profile.save()
+                from .tasks import generate_invoice
+
+                # generate an invoice for the tenant
+                generate_invoice.delay(
+                    tenant_profile.id,
+                    self.previous_reading,
+                    self.current_reading,
+                    reading_date=self.reading_date,
+                )
 
     def __str__(self):
-        return self.property.title
+        return f"Meter reading for {self.property} on {self.reading_date}"
 
 
 class TenantProfile(models.Model):
+    PAYMENT_CHOICES = [
+        ("paid", "Paid"),
+        ("partially_paid", "Partially Paid"),
+        ("overdue", "Overdue"),
+    ]
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, limit_choices_to={"user_type": "tenant"}
+    )  # Link to tenant user
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="tenants",
+        limit_choices_to={"available": True},
     )
-    phone_number = models.CharField(max_length=15)
-    current_property = models.ForeignKey(
-        Property, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    moved_in = models.DateField(auto_now_add=True)
-    billed_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    last_billed_date = models.DateField(blank=True, null=True)
+
+    # Tenant-specific details
+    move_in_date = models.DateField(auto_now_add=True)  # Track when the tenant moved in
+    move_out_date = models.DateField(null=True, blank=True)  # If tenant has moved out
+
+    # Payment-related fields
+    water_bill = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    arrears = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_monthly_bill = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_billed = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0
+    )  # New field for total billed
+    total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_payment_date = models.DateField(null=True, blank=True)
+    rent_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_CHOICES,
+        default="overdue",
+    )  # Rent payment status
 
     def __str__(self):
-        return self.user.first_name
+        return f"Tenant Profile: {self.user.first_name} - {self.property.house}"
+
+    def clean(self):
+        # Ensure that the user is a tenant and does not already have a tenant profile
+        if self.user.user_type != "tenant":
+            raise ValidationError("User must be of type 'tenant'.")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Call the clean method to validate
+        super().save(*args, **kwargs)  # Call the original save method
+        if self.property:
+            self.property.available = False
+            self.property.save()  # Save the updated property
+
+    def update_rent_status(self):
+        """Update rent status based on the payment and arrears."""
+        if self.total_monthly_bill == 0:
+            self.rent_status = "paid"
+            self.arrears = 0
+        else:
+            self.rent_status = "overdue"
+            self.arrears = self.total_billed - self.total_paid
+        self.save()
 
 
-class Application(models.Model):
-    STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("accepted", "Accepted"),
-        ("rejected", "Rejected"),
+class RentInvoice(models.Model):
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE)
+    file = models.FileField(upload_to="static/invoices/", blank=True, null=True)
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name="invoices",
+        null=True,
+        blank=True,
+    )
+    monthly_rent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    previous_water_reading = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0
+    )
+    current_water_reading = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0
+    )
+    water_consumption = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    water_bill = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    arrears = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    reading_date = models.DateField(blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    billing_period_start = models.DateField(auto_now_add=True)
+    billing_period_end = models.DateField(blank=True, null=True)
+    price_per_unit = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    paid = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Invoice for {self.recipient} - {self.total_amount} due"
+
+    class Meta:
+        verbose_name = "Invoice"
+        verbose_name_plural = "Invoices"
+        ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        """Automatically set the property field based on the tenant's property."""
+        if not self.property and self.recipient:
+            tenant_profile = TenantProfile.objects.filter(user=self.recipient).first()
+            if tenant_profile and tenant_profile.property:
+                self.property = tenant_profile.property
+        super().save(*args, **kwargs)
+
+
+class Transaction(models.Model):
+    TRANSACTION_STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('fail', 'Fail'),
     ]
 
-    tenant = models.ForeignKey(
-        User, on_delete=models.CASCADE, limit_choices_to={"user_type": "tenant"}
+    invoice = models.ForeignKey(
+        RentInvoice, on_delete=models.CASCADE, related_name="transactions"
     )
-    property = models.ForeignKey(Property, on_delete=models.CASCADE)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
-
-
-@receiver(post_save, sender=Application)
-def create_or_update_tenant_profile(sender, instance, **kwargs):
-    # Check if the application is accepted
-    if instance.status == "accepted":
-        tenant = instance.tenant
-        property = instance.property
-
-        # Create or update the TenantProfile
-        tenant_profile, created = TenantProfile.objects.get_or_create(
-            user=tenant,
-            defaults={
-                "current_property": property,
-                "billed_amount": 0,
-                "paid_amount": 0,
-            },
-        )
-
-        if not created:
-            # If TenantProfile exists, update the current property
-            tenant_profile.current_property = property
-            tenant_profile.save()
-
-
-class Lease(models.Model):
-    tenant = models.ForeignKey(
-        User, on_delete=models.CASCADE, limit_choices_to={"user_type": "tenant"}
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    transaction_status = models.CharField(
+        max_length=10,
+        choices=TRANSACTION_STATUS_CHOICES,
+        default='fail',  # Default value can be set as needed
     )
-    property = models.ForeignKey(Property, on_delete=models.CASCADE)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    rent_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    lease_document = models.FileField(upload_to="leases/")
-    created_at = models.DateTimeField(auto_now_add=True)
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.property.title} - {self.tenant.username}"
+        return f"Transaction {self.transaction_id} - {self.transaction_status}"
 
 
-class Payment(models.Model):
-    tenant = models.ForeignKey(
-        User, on_delete=models.CASCADE, limit_choices_to={"user_type": "tenant"}
-    )
-    lease = models.ForeignKey(Lease, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_date = models.DateTimeField(auto_now_add=True)
-    payment_status = models.CharField(
-        max_length=20, choices=(("pending", "Pending"), ("completed", "Completed"))
-    )
-    payment_gateway_reference = models.CharField(max_length=255, blank=True, null=True)
+@receiver(post_save, sender=Transaction)
+def process_payment(sender, instance, created, **kwargs):
+    # Check if the transaction is created and if it's successful
+    from django.db import transaction as db_transaction
 
-    def __str__(self):
-        return f"{self.tenant.username} - {self.amount} on {self.payment_date}"
+    if created and instance.transaction_status == "success":
+        print("provisioning transaction....")
+        try:
+            # Start a database transaction
+            with db_transaction.atomic():
+                invoice = instance.invoice
+                tenant_profile = TenantProfile.objects.get(user=invoice.recipient)
+
+                if instance.amount == invoice.total_amount:
+                    # Mark invoice as paid
+                    invoice.paid = True
+                    invoice.save()
+
+                    # Update tenant profile
+                    tenant_profile.arrears = 0
+                    tenant_profile.total_paid += instance.amount
+                    tenant_profile.update_rent_status()  # Update status
+                elif instance.amount < invoice.total_amount:
+                    # Partial payment
+                    tenant_profile.arrears = invoice.total_amount - (
+                        tenant_profile.total_paid + instance.amount
+                    )
+                    tenant_profile.total_paid += instance.amount
+                    tenant_profile.update_rent_status()  # Update status
+
+                tenant_profile.save()  # Save tenant profile
+        except TenantProfile.DoesNotExist:
+            print(
+                f"Tenant profile not found for invoice recipient: {invoice.recipient}"
+            )
+        except Exception as e:
+            print(f"An error occurred while processing payment: {e}")
 
 
 class MaintenanceRequest(models.Model):
@@ -231,14 +405,29 @@ class MaintenanceRequest(models.Model):
     )
     submitted_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(blank=True, null=True)
-    image1 = models.ImageField(upload_to="maintenance-requests/", null=True, blank=True)
-    image2 = models.ImageField(upload_to="maintenance-requests/", null=True, blank=True)
-    image3 = models.ImageField(upload_to="maintenance-requests/", null=True, blank=True)
-    video = models.FileField(upload_to="maintenance-requests/", null=True, blank=True)
+    image1 = models.ImageField(upload_to="static/maintenance-requests/", null=True, blank=True)
+    image2 = models.ImageField(upload_to="static/maintenance-requests/", null=True, blank=True)
+    image3 = models.ImageField(upload_to="static/maintenance-requests/", null=True, blank=True)
+    video = models.FileField(upload_to="static/maintenance-requests/", null=True, blank=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
-        return f"Request by {self.tenant.first_name} - {self.property.title}"
+        return f"Request by {self.tenant.first_name} - {self.property.house}"
+
+
+class VacateNotice(models.Model):
+    tenant = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={"user_type": "tenant"}
+    )
+    notice_date = models.DateField(auto_now_add=True)
+    vacate_date = models.DateField()
+    reason = models.TextField(null=True, blank=True)
+    reviewed = models.BooleanField(
+        default=False
+    )  # New field for tracking review status
+
+    def __str__(self):
+        return f"{self.tenant} - Vacate on {self.vacate_date}"
 
 
 class Notification(models.Model):

@@ -23,8 +23,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "admin_tools_stats",  # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
-    "django_nvd3",
+    #"admin_tools_stats",  # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
+    #"django_nvd3",
     "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -32,11 +32,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_celery_beat",
-    "django_celery_results",
+    #"django_celery_beat",
+    #"django_celery_results",
     "corsheaders",
     "rest_framework",
-    "base",
+    #"base",
+    "django_daraja",
+    
+    'base.apps.BaseConfig',
 ]
 
 
@@ -161,8 +164,9 @@ CSRF_TRUSTED_ORIGINS = [
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = "/"
+STATIC_URL = '/static/'#Location of static files
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
+STATIC_ROOT  = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -179,32 +183,13 @@ EMAIL_USE_SSL = True
 EMAIL_HOST_USER = "dev@rowg.co.ke"
 EMAIL_HOST_PASSWORD = "MP=+mvHYVB,^"
 
+
 ADMIN_CHARTS_NVD3_JS_PATH = "bow/nvd3/build/nv.d3.js"
 ADMIN_CHARTS_NVD3_CSS_PATH = "bow/nvd3/build/nv.d3.css"
 ADMIN_CHARTS_D3_JS_PATH = "bow/d3/d3.js"
 
 ADMIN_CHARTS_USE_JSONFIELD = False
 
-
-# celery settings
-
-# CACHES = {
-#    'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': "redis://127.0.0.1:6379/1",
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#             'CONNECTION_POOL_KWARGS': {'max_connections': 100},
-#         },
-#         'KEY_PREFIX': 'my_cache_prefix',  # Add a prefix to your cache keys
-#         'TIMEOUT': 300,  # Cache timeout in seconds (adjust as needed)
-#         'VERSION': 1,  # Cache version (change this if you change your cache keys structure)
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#             'IGNORE_EXCEPTIONS': True,  # Ignore cache-related exceptions
-#         },
-#     }
-# }
 
 # Celery settings
 CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"  # Use RabbitMQ as the broker
@@ -223,43 +208,59 @@ CELERY_TASK_QUEUES = {
         "routing_key": "default",
     },
 }
-# CELERY_BEAT_SCHEDULE = {
-#     "generate_monthly_bills": {
-#         "task": "base.tasks.generate_monthly_bills",
-#         "schedule": 60.0,  # Run every minute for testing
-#     },
-#     "task-name": {
-#         "task": "base.tasks.scheduled_task",  # Reference to your task
-#         "schedule": 60.0,  # Daily at noon
-#     },
-# }
+
+# The Mpesa environment to use
+# Possible values: sandbox, production
+
+MPESA_ENVIRONMENT = "sandbox"
+
+# Credentials for the daraja app
+
+MPESA_CONSUMER_KEY = "qLqtg4pr2ny5vW7zAdwOsGVHiplAGVN1tDsJ0yEdplyH3uQr"
+MPESA_CONSUMER_SECRET = "A9rtEG4TIoRDPXYXDYAMhwAg3LAA24NgEEKYDfjN9TdYKh7JtmtwwwE5OecTuQub"
+
+# Shortcode to use for transactions. For sandbox  use the Shortcode 1 provided on test credentials page
+
+MPESA_SHORTCODE = "174379"
+
+# Shortcode to use for Lipa na MPESA Online (MPESA Express) transactions
+# This is only used on sandbox, do not set this variable in production
+# For sandbox use the Lipa na MPESA Online Shorcode provided on test credentials page
+
+MPESA_EXPRESS_SHORTCODE = "174379"
+
+# Type of shortcode
+# Possible values:
+# - paybill (For Paybill)
+# - till_number (For Buy Goods Till Number)
+
+MPESA_SHORTCODE_TYPE = "paybill"
+
+# Lipa na MPESA Online passkey
+# Sandbox passkey is available on test credentials page
+# Production passkey is sent via email once you go live
+
+MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+
+# Username for initiator (to be used in B2C, B2B, AccountBalance and TransactionStatusQuery Transactions)
+
+MPESA_INITIATOR_USERNAME = "testapi"
+
+# Plaintext password for initiator (to be used in B2C, B2B, AccountBalance and TransactionStatusQuery Transactions)
+
+MPESA_INITIATOR_SECURITY_CREDENTIAL = "Safaricom999!*!"
 
 
 JAZZMIN_SETTINGS = {
-    # title of the window (Will default to current_admin_site.site_title if absent or None)
-    "site_title": "Rowg Admin",
-    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
-    "site_header": "Rowg",
-    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_title": "Rowg",
+    "site_header": "Rowg Admin",
     "site_brand": "Rowg",
-    # Logo to use for your site, must be present in static files, used for brand on top left
-    "site_logo": "books/img/logo.png",
-    # Logo to use for your site, must be present in static files, used for login form logo (defaults to site_logo)
-    "login_logo": None,
-    # Logo to use for login form in dark themes (defaults to login_logo)
-    "login_logo_dark": None,
-    # CSS classes that are applied to the logo above
-    "site_logo_classes": "img-circle",
-    # Relative path to a favicon for your site, will default to site_logo if absent (ideally 32x32 px)
-    "site_icon": None,
-    # Welcome text on the login screen
-    "welcome_sign": "Welcome to the library",
+    "site_icon": "images/favicon.png",
+    # Add your own branding here
+    "site_logo": None,
+    "welcome_sign": "Welcome to Rowg",
     # Copyright on the footer
-    "copyright": "Acme Library Ltd",
-    # List of model admins to search from the search bar, search bar omitted if excluded
-    # If you want to use a single search field you dont need to use a list, you can use a simple string
-    "search_model": ["auth.User", "auth.Group"],
-    # Field name on user model that contains avatar ImageField/URLField/Charfield or a callable that receives the user
+    "copyright": "Rowg",
     "user_avatar": None,
     ############
     # Top Menu #
@@ -267,53 +268,38 @@ JAZZMIN_SETTINGS = {
     # Links to put along the top menu
     "topmenu_links": [
         # Url that gets reversed (Permissions can be added)
-        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-        # external url that opens in a new window (Permissions can be added)
-        {
-            "name": "Support",
-            "url": "https://github.com/farridav/django-jazzmin/issues",
-            "new_window": True,
-        },
+        {"name": "Rowg", "url": "home", "permissions": ["auth.view_user"]},
         # model admin to link to (Permissions checked against model)
-        # {"model": "auth.User"},
-        # App with dropdown menu to all its models pages (Permissions checked against models)
-        {"app": "base"},
-    ],
-    #############
-    # User Menu #
-    #############
-    # Additional links to include in the user menu on the top right ("app" url type is not allowed)
-    "usermenu_links": [
-        {
-            "name": "Support",
-            "url": "https://github.com/farridav/django-jazzmin/issues",
-            "new_window": True,
-        },
-        {"model": "auth.user"},
+        {"model": "auth.User"},
     ],
     #############
     # Side Menu #
     #############
     # Whether to display the side menu
     "show_sidebar": True,
+    "hide_email": True,
     # Whether to aut expand the menu
     "navigation_expanded": True,
-    # Hide these apps when generating side menu e.g (auth)
-    "hide_apps": [],
-    # Hide these models when generating side menu (e.g auth.user)
-    "hide_models": [],
-    # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
-    "order_with_respect_to": ["auth", "books", "books.author", "books.book"],
     # Custom icons for side menu apps/models See https://fontawesome.com/icons?d=gallery&m=free&v=5.0.0,5.0.1,5.0.10,5.0.11,5.0.12,5.0.13,5.0.2,5.0.3,5.0.4,5.0.5,5.0.6,5.0.7,5.0.8,5.0.9,5.1.0,5.1.1,5.2.0,5.3.0,5.3.1,5.4.0,5.4.1,5.4.2,5.13.0,5.12.0,5.11.2,5.11.1,5.10.0,5.9.0,5.8.2,5.8.1,5.7.2,5.7.1,5.7.0,5.6.3,5.5.0,5.4.2
     # for the full list of 5.13.0 free icon classes
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
+        "base.User": "fas fa-user",
         "auth.Group": "fas fa-users",
+        "admin.LogEntry": "fas fa-file",
+        "base.Property": "fas fa-building",
+        "base.TenantProfile": "fas fa-users",
+        "base.WaterPrice": "fas fa-coins",
+        "base.WaterMeterReading": "fas fa-faucet",
+        "base.MaintenanceRequest": "fas fa-toolbox",
+        "base.Notification": "fas fa-bell",
+        "base.Transaction": "fas fa-wallet",
+        "base.RentInvoice": "fas fa-file-invoice",
     },
-    # Icons that are used when one is not manually specified
+    # # Icons that are used when one is not manually specified
     "default_icon_parents": "fas fa-chevron-circle-right",
-    "default_icon_children": "fas fa-circle",
+    "default_icon_children": "fas fa-arrow-circle-right",
     #################
     # Related Modal #
     #################
@@ -323,27 +309,50 @@ JAZZMIN_SETTINGS = {
     # UI Tweaks #
     #############
     # Relative paths to custom CSS/JS scripts (must be present in static files)
-    "custom_css": None,
+    # Uncomment this line once you create the bootstrap-dark.css file
+    "custom_css": 'css/custom-admin.css',
     "custom_js": None,
-    # Whether to link font from fonts.googleapis.com (use custom_css to supply font otherwise)
-    "use_google_fonts_cdn": True,
     # Whether to show the UI customizer on the sidebar
     "show_ui_builder": False,
     ###############
     # Change view #
     ###############
-    # Render out the change view as a single form, or in tabs, current options are
-    # - single
-    # - horizontal_tabs (default)
-    # - vertical_tabs
-    # - collapsible
-    # - carousel
-    "changeform_format": "horizontal_tabs",
+    "changeform_format": "vertical_tabs",
     # override change forms on a per modeladmin basis
     "changeform_format_overrides": {
         "auth.user": "collapsible",
         "auth.group": "vertical_tabs",
     },
-    # Add a language dropdown into the admin
-    # "language_chooser": True,
+}
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": True,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-light",
+    "accent": "accent-teal",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-light-success",
+    "sidebar_nav_small_text": True,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "lumen",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+    "actions_sticky_top": False,
 }

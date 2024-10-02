@@ -6,7 +6,7 @@ export default APIContext;
 export const APIProvider = (props) => {
   //global start section for urls in the entire project
   const backendUrl = "http://127.0.0.1:8000/";
-  const frontendUrl = "https://copyvalidator.com/";
+  const frontendUrl = "http://localhost:5173/";
 
   let contextData = {
     API_URL: backendUrl,

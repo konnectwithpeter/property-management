@@ -1,18 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import ListedProperties from "./ListedProperties";
+import AuthContext from "../context/AuthContext";
 import Maintenance from "./Maintenance";
 import Navbar from "./Navbar";
 import TenantNotifications from "./Notifications";
 import Overviews from "./Overviews";
-import RentedProperty from "./RentedProperty";
-import { Transactions } from "./Transactions";
-import AuthContext from "../context/AuthContext";
-import Applications from "./Applications";
+import VacateNoticeForm from "./VacateNotice";
 
 const TenantPage = () => {
   const [activePage, setActivePage] = useState("overview");
 
-  const [properties, setProperties] = useState([]);
+  const [tenantInfo, setTenantInfo] = useState([]);
   const [loading, setLoading] = useState(true);
   const { authTokens } = useContext(AuthContext);
 
@@ -24,15 +21,14 @@ const TenantPage = () => {
   };
 
   // Function to fetch properties from the Django API
-  const fetchProperties = async () => {
+  const fetchTenantInfo = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/properties/",
+        "http://127.0.0.1:8000/api/tenant-info/",
         axiosConfig
       ); // Your Django API endpoint
       const data = await response.json();
-      setProperties(data); // Store properties in state
-      console.log(data)
+      setTenantInfo(data); // Store properties in state
     } catch (error) {
       console.error("Error fetching properties:", error);
     } finally {
@@ -42,22 +38,31 @@ const TenantPage = () => {
 
   // Fetch properties when the component loads
   useEffect(() => {
-    fetchProperties();
+    fetchTenantInfo();
   }, []);
 
   const renderContent = () => {
     switch (activePage) {
       case "overview":
-        return <Overviews />;
+        return (
+          <Overviews
+            tenant_profile={tenantInfo?.tenant_profile}
+            invoices={tenantInfo?.invoices}
+            axiosConfig={axiosConfig}
+          />
+        );
 
-      case "properties":
-        return <ListedProperties properties={properties} />;
       case "maintenance":
-        return <Maintenance />;
-      case "applications":
-        return <Applications />;
-      case "info":
-        return <RentedProperty />;
+        return (
+          <Maintenance currentProperty={tenantInfo?.tenant_profile.property} />
+        );
+      case "vacate":
+        return (
+          <VacateNoticeForm
+            currentProperty={tenantInfo?.tenant_profile.property}
+          />
+        );
+
       case "notifications":
         return <TenantNotifications />;
       default:
@@ -69,7 +74,14 @@ const TenantPage = () => {
     <div className="flex min-h-screen w-full flex-col">
       <Navbar activePage={activePage} setActivePage={setActivePage} />
       <br />
-      {renderContent()}
+      <main
+        className="flex flex-col gap-5 w-full pb-5"
+        style={{ minWidth: "98.5vw", width: "100%", padding: "1rem" }}
+      >
+        {renderContent()}
+      </main>
+
+      {console.log(tenantInfo)}
     </div>
   );
 };

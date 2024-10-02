@@ -93,154 +93,131 @@ class SetNewPasswordSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "profile_picture"]
-
-
-class MaintenanceRequestSerializer(serializers.ModelSerializer):
-    image1 = serializers.ImageField(use_url=True)
-    image2 = serializers.ImageField(use_url=True)
-    image3 = serializers.ImageField(use_url=True)
-    property_name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = MaintenanceRequest
         fields = [
-            "tenant",
-            "property",
-            "property_name",
-            "type",
-            "description",
-            "status",
-            "severity",
-            "image1",
-            "image2",
-            "submitted_at",
-            "image3",
-            "video",
-            "budget",
-            "completed_at",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "profile_picture",
+            "user_type",
         ]
 
-    def get_property_name(self, obj):
-        return obj.property.title
+
+class PropertySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Property
+        fields = ["id", "location", "block", "house", "rent_price"]
 
 
 class TenantProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+    property = PropertySerializer()
 
     class Meta:
         model = TenantProfile
         fields = [
-            "id",
             "user",
-            "phone_number",
-            "current_property",
-            "moved_in",
-            "billed_amount",
-            "paid_amount",
+            "property",
+            "water_bill",
+            "arrears",
+            "total_monthly_bill",
+            "total_billed",
+            "total_paid",
+            "rent_status",
+            "move_in_date",
         ]
 
 
-class PropertyFileSerializer(serializers.ModelSerializer):
+class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PropertyFile
+        model = Transaction
+        fields = [
+            "id",
+            "phone_number",
+            "amount",
+            "transaction_status",
+            "transaction_id",
+            "timestamp",
+        ]
+
+
+class RentInvoiceSerializer(serializers.ModelSerializer):
+    transactions = TransactionSerializer(many=True)
+
+    class Meta:
+        model = RentInvoice
         fields = "__all__"
 
 
-class PropertySerializer(serializers.ModelSerializer):
-    landlord = UserSerializer(read_only=True)
-    maintenance_requests = MaintenanceRequestSerializer(many=True, read_only=True)
-    tenant_profile = TenantProfileSerializer(
-        read_only=True
-    )  # Assuming you have this serializer
-    property_files = PropertyFileSerializer(
+class NotificationSerializer(serializers.ModelSerializer):
+    sender = UserSerializer()
+
+    class Meta:
+        model = Notification
+        fields = ["title", "message", "date", "read", "notification_type", "sender"]
+
+
+class VacateNoticeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VacateNotice
+        fields = ["vacate_date", "reason"]
+
+    def validate(self, data):
+        print("Validation data:", data)
+        return data
+
+
+class MaintenanceRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MaintenanceRequest
+        fields = [
+            "type",
+            "description",
+            "status",
+            "severity",
+            "submitted_at",
+            "completed_at",
+            "image1",
+            "image2",
+            "image3",
+            "video",
+            "budget",
+        ]
+
+
+class PropertyAdminSerializer(serializers.ModelSerializer):
+    landlord = serializers.SerializerMethodField()
+    tenants = TenantProfileSerializer(many=True, read_only=True)
+    invoices = RentInvoiceSerializer(
         many=True, read_only=True
-    )  # Include files in the response
+    )  # Now using the updated RentInvoiceSerializer
+    maintenances = MaintenanceRequestSerializer(many=True, read_only=True)
 
     class Meta:
         model = Property
         fields = [
             "id",
-            "title",
-            "description",
-            "address",
-            "rent_price",
-            "available",
-            "image1",
-            "image2",
-            "image3",
-            "bedrooms",
-            "bathrooms",
-            "parking",
-            "created_at",
-            "updated_at",
+            "house",
+            "block",
+            "location",
             "landlord",
-            "maintenance_requests",
-            "tenant_profile",
-            "property_files",
+            "tenants",
+            "invoices",
+            "maintenances",
         ]
 
-
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = ["id", "tenant", "property", "amount", "payment_date", "status"]
-
-
-class NotificationSerializer(serializers.ModelSerializer):
-    sender = UserSerializer()  # To get sender's details
-    recipient = UserSerializer()  # To get recipient's details
-
-    class Meta:
-        model = Notification
-        fields = [
-            "id",
-            "title",
-            "message",
-            "date",
-            "read",
-            "notification_type",
-            "sender",
-            "recipient",
-        ]
-
-
-class ApplicationSerializer(serializers.ModelSerializer):
-    tenant_email = serializers.EmailField(source="tenant.email", read_only=True)
-    property_name = serializers.CharField(source="property.name", read_only=True)
-    status = serializers.ChoiceField(
-        choices=Application.STATUS_CHOICES, required=True
-    )  # Ensure this is required if necessary
-    profile_picture = serializers.ImageField(
-        source="tenant.profile_picture", read_only=True
-    )
-    first_name = serializers.CharField(source="tenant.first_name", read_only=True)
-    last_name = serializers.CharField(source="tenant.last_name", read_only=True)
-
-    class Meta:
-        model = Application
-        fields = [
-            "id",
-            "tenant",
-            "tenant_email",
-            "property",
-            "property_name",
-            "status",
-            "submitted_at",
-            "reviewed_at",
-            "profile_picture",
-            "first_name",
-            "last_name",
-        ]
-        read_only_fields = ["id", "submitted_at", "reviewed_at"]
-
-    def create(self, validated_data):
-        tenant = validated_data.get("tenant")
-        property_obj = validated_data.get("property")
-
-        if Application.objects.filter(tenant=tenant, property=property_obj).exists():
-            raise serializers.ValidationError(
-                "You have already applied for this property."
-            )
-
-        return super().create(validated_data)
+    def get_landlord(self, obj):
+        if obj.landlord:
+            return {
+                "id": obj.landlord.id,
+                "email": obj.landlord.email,
+                "first_name": obj.landlord.first_name,
+                "last_name": obj.landlord.last_name,
+                "phone": obj.landlord.phone,
+                "profile_picture": (
+                    obj.landlord.profile_picture.url
+                    if obj.landlord.profile_picture
+                    else None
+                ),
+            }
+        return None

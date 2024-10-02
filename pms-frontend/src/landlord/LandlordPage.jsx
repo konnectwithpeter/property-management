@@ -40,6 +40,98 @@ import { ModeToggle } from "../components/ModeToggle";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
 
+
+
+const properties = [
+  {
+    id: 1,
+    house: "F014",
+    block: "Wing2",
+    location: "Kitisuro Apartments",
+    landlord: {
+      id: 2,
+      email: "vorawa4168@skrak.com",
+      first_name: "Small",
+      last_name: "Test",
+      phone: "0705624743",
+      profile_picture: null
+    },
+    tenants: [
+      {
+        user: {
+          email: "ketelal558@skrak.com",
+          first_name: "Tenant",
+          last_name: "One",
+          phone: "0705624743",
+          profile_picture: null,
+          user_type: "tenant"
+        },
+        property: {
+          id: 1,
+          location: "Kitisuro Apartments",
+          block: "Wing2",
+          house: "F014",
+          rent_price: "8000.00"
+        },
+        water_bill: "200.00",
+        arrears: "0.00",
+        total_monthly_bill: "8200.00",
+        total_billed: "91000.00",
+        total_paid: "0.00",
+        rent_status: "overdue",
+        move_in_date: "2024-09-29"
+      }
+    ],
+    invoices: [
+      {
+        id: 11,
+        transactions: [
+          {
+            id: 16,
+            phone_number: "0705624743",
+            amount: "8200.00",
+            transaction_status: "success",
+            transaction_id: "dad6-4c34-8787-c8cb963a496d128713",
+            timestamp: "2024-09-30T15:08:00.245967Z"
+          }
+        ],
+        file: "/invoices/Invoice_3_2024-09-30_RGpLbN0.pdf",
+        monthly_rent: "8000.00",
+        previous_water_reading: "48.00",
+        current_water_reading: "49.00",
+        water_consumption: "1.00",
+        water_bill: "200.00",
+        arrears: "0.00",
+        reading_date: "2024-09-29",
+        total_amount: "8200.00",
+        created_at: "2024-09-30T15:02:15.171649Z",
+        billing_period_start: "2024-09-30",
+        billing_period_end: "2024-09-10",
+        price_per_unit: "200.00",
+        paid: true,
+        recipient: 3,
+        property: 1
+      }
+    ]
+  },
+  {
+    id: 2,
+    house: "w012",
+    block: "Left W",
+    location: "Upperhill Apartments",
+    landlord: {
+      id: 2,
+      email: "vorawa4168@skrak.com",
+      first_name: "Small",
+      last_name: "Test",
+      phone: "0705624743",
+      profile_picture: null
+    },
+    tenants: [],
+    invoices: []
+  }
+];
+
 const LandlordPage = () => {
   const [properties, setProperties] = useState([]);
 
@@ -103,6 +195,7 @@ const LandlordPage = () => {
             axiosConfig={axiosConfig}
             fetchData={fetchData}
             setActivePage={setActivePage}
+            properties={properties}
           />
         );
       case "maintenance":
@@ -124,10 +217,13 @@ const LandlordPage = () => {
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <AsideNav activePage={activePage} setActivePage={setActivePage} />
 
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div
+        className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 pt-0"
+        style={{ paddingTop: 0 }}
+      >
         <header
           className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6"
-          style={{ zIndex: 10 }}
+          style={{ zIndex: 10, top: 0 }}
         >
           <Sheet>
             <SheetTrigger asChild>
@@ -143,7 +239,7 @@ const LandlordPage = () => {
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
                   <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">Acme Inc</span>
+                  <span className="sr-only">Rowg Inc</span>
                 </Link>
                 <Link
                   href="#"
@@ -190,15 +286,10 @@ const LandlordPage = () => {
                   <Link href="#">Dashboard</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
+              
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Orders</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Recent Orders</BreadcrumbPage>
+                <BreadcrumbPage style={{textTransform:"capitalize"}}>{activePage}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
