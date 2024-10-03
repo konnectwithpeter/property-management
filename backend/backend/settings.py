@@ -17,7 +17,7 @@ SECRET_KEY = "django-insecure-)8+zor))&a-7y)s009knrqjsmrkv52=g*!w!n$2f545t%m+kbw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -157,7 +157,8 @@ USE_TZ = True
 CORS_ORIGIN_ALLOW_ALL = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",  # Allow your Vite dev server
+    "http://localhost:5173",
+    "http://147.79.102.115:8000/",  # Allow your Vite dev server
 ]
 
 # Static files (CSS, JavaScript, Images)
@@ -165,8 +166,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 STATIC_URL = "/static/"  # Location of static files
 STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "build", "static"),
     os.path.join(BASE_DIR, "static"),
-    os.path.join(BASE_DIR,  'build', 'static')
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
