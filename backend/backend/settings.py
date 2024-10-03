@@ -23,8 +23,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    #"admin_tools_stats",  # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
-    #"django_nvd3",
+    # "admin_tools_stats",  # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
+    # "django_nvd3",
     "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -36,10 +36,9 @@ INSTALLED_APPS = [
     "django_celery_results",
     "corsheaders",
     "rest_framework",
-    #"base",
+    # "base",
     "django_daraja",
-    
-    'base.apps.BaseConfig',
+    "base.apps.BaseConfig",
 ]
 
 
@@ -97,7 +96,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [os.path.join(BASE_DIR, "templates"), os.path.join(BASE_DIR, "build")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -164,9 +163,12 @@ CSRF_TRUSTED_ORIGINS = [
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'#Location of static files
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
-STATIC_ROOT  = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = "/static/"  # Location of static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR,  'build', 'static')
+]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -217,7 +219,9 @@ MPESA_ENVIRONMENT = "sandbox"
 # Credentials for the daraja app
 
 MPESA_CONSUMER_KEY = "qLqtg4pr2ny5vW7zAdwOsGVHiplAGVN1tDsJ0yEdplyH3uQr"
-MPESA_CONSUMER_SECRET = "A9rtEG4TIoRDPXYXDYAMhwAg3LAA24NgEEKYDfjN9TdYKh7JtmtwwwE5OecTuQub"
+MPESA_CONSUMER_SECRET = (
+    "A9rtEG4TIoRDPXYXDYAMhwAg3LAA24NgEEKYDfjN9TdYKh7JtmtwwwE5OecTuQub"
+)
 
 # Shortcode to use for transactions. For sandbox  use the Shortcode 1 provided on test credentials page
 
@@ -252,15 +256,15 @@ MPESA_INITIATOR_SECURITY_CREDENTIAL = "Safaricom999!*!"
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Rowg",
-    "site_header": "Rowg Admin",
-    "site_brand": "Rowg",
-    "site_icon": "images/favicon.png",
+    "site_title": "Heri Homes",
+    "site_header": "Heri Homes Admin",
+    "site_brand": "",
+    "site_icon": None,
     # Add your own branding here
     "site_logo": None,
-    "welcome_sign": "Welcome to Rowg",
+    "welcome_sign": "Welcome to Heri Homes",
     # Copyright on the footer
-    "copyright": "Rowg",
+    "copyright": "Heri Homes",
     "user_avatar": None,
     ############
     # Top Menu #
@@ -268,7 +272,7 @@ JAZZMIN_SETTINGS = {
     # Links to put along the top menu
     "topmenu_links": [
         # Url that gets reversed (Permissions can be added)
-        {"name": "Rowg", "url": "home", "permissions": ["auth.view_user"]},
+        {"name": "Heri Homes", "url": "home", "permissions": ["auth.view_user"]},
         # model admin to link to (Permissions checked against model)
         {"model": "auth.User"},
     ],
@@ -278,7 +282,6 @@ JAZZMIN_SETTINGS = {
     # Whether to display the side menu
     "show_sidebar": True,
     "hide_email": True,
-    
     # Whether to aut expand the menu
     "navigation_expanded": True,
     # Custom icons for side menu apps/models See https://fontawesome.com/icons?d=gallery&m=free&v=5.0.0,5.0.1,5.0.10,5.0.11,5.0.12,5.0.13,5.0.2,5.0.3,5.0.4,5.0.5,5.0.6,5.0.7,5.0.8,5.0.9,5.1.0,5.1.1,5.2.0,5.3.0,5.3.1,5.4.0,5.4.1,5.4.2,5.13.0,5.12.0,5.11.2,5.11.1,5.10.0,5.9.0,5.8.2,5.8.1,5.7.2,5.7.1,5.7.0,5.6.3,5.5.0,5.4.2
@@ -311,7 +314,7 @@ JAZZMIN_SETTINGS = {
     #############
     # Relative paths to custom CSS/JS scripts (must be present in static files)
     # Uncomment this line once you create the bootstrap-dark.css file
-    "custom_css": 'css/custom-admin.css',
+    "custom_css": "css/custom-admin.css",
     "custom_js": None,
     # Whether to show the UI customizer on the sidebar
     "show_ui_builder": False,
