@@ -7,17 +7,19 @@ import { useContext, useState, useEffect } from "react";
 import AuthContext from "../../context/AuthContext";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import APIContext from "../context/APIContext";
 
 
 const PropertyCard = ({ property, isLoading }) => {
+  const { API_URL} = useContext(APIContext);
   const [selectedImage, setSelectedImage] = useState(
-    `http://127.0.0.1:8000${property.image1}`
+    `${API_URL}${property.image1}`
   );
   const { user, authTokens } = useContext(AuthContext);
 
   // Handle image selection from thumbnails
   const handleImageSelect = (image) => {
-    setSelectedImage(`http://127.0.0.1:8000${image}`);
+    setSelectedImage(`${API_URL}${image}`);
   };
 
   const axiosConfig = {
@@ -30,7 +32,7 @@ const PropertyCard = ({ property, isLoading }) => {
   const sendApplication = async () => {
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/applications/`,
+        `${API_URL}/api/applications/`,
         {
           property: property.id, // Ensure this is the correct property ID
           status: "pending", // Example status; use an appropriate value based on your choices
@@ -75,7 +77,7 @@ const PropertyCard = ({ property, isLoading }) => {
           ) : (
             <>
               <img
-                src={`http://127.0.0.1:8000${property.image1}`}
+                src={`${API_URL}${property.image1}`}
                 alt={`Thumbnail 1`}
                 className={`h-10 w-10 object-cover rounded-md cursor-pointer ${
                   selectedImage === property.image1 ? "ring-2 ring-primary" : ""
@@ -84,7 +86,7 @@ const PropertyCard = ({ property, isLoading }) => {
               />
               {property.image2 && (
                 <img
-                  src={`http://127.0.0.1:8000${property.image2}`}
+                  src={`${API_URL}${property.image2}`}
                   alt={`Thumbnail 2`}
                   className={`h-10 w-10 object-cover rounded-md cursor-pointer ${
                     selectedImage === property.image2 ? "ring-2 ring-primary" : ""
@@ -94,7 +96,7 @@ const PropertyCard = ({ property, isLoading }) => {
               )}
               {property.image3 && (
                 <img
-                  src={`http://127.0.0.1:8000${property.image3}`}
+                  src={`${API_URL}${property.image3}`}
                   alt={`Thumbnail 3`}
                   className={`h-10 w-10 object-cover rounded-md cursor-pointer ${
                     selectedImage === property.image3 ? "ring-2 ring-primary" : ""

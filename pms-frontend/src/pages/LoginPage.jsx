@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import APIContext from "@/context/APIContext";
+import APIContext from "../context/APIContext";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -85,7 +85,7 @@ export default function LoginForm() {
     try {
       await axios.post(`${API_URL}api/request-reset-email/`, {
         email: resetEmail,
-        redirect_url: `${BASE_URL}reset-password/`,
+        redirect_url: `${API_URL}reset-password/`,
       });
       setResetDialogOpen(false); // Close dialog
       setNotification(
@@ -197,10 +197,7 @@ export default function LoginForm() {
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
             <Link
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/register");
-              }}
+              to={`${API_URL}/admin/`}
               className="underline"
             >
               Sign up

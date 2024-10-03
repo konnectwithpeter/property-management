@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import APIContext from "../context/APIContext";
 
 const VacateNoticeForm = () => {
   const [vacateDate, setVacateDate] = useState("");
   const [reason, setReason] = useState("");
   const { authTokens } = useContext(AuthContext);
+  const { API_URL } = useContext(APIContext);
 
   let axiosConfig = {
     headers: {
@@ -23,7 +25,8 @@ const VacateNoticeForm = () => {
     e.preventDefault();
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/vacate-notices/",
+        `${API_URL}/api/vacate-notices/`,
+
         {
           vacate_date: vacateDate,
           reason: reason,

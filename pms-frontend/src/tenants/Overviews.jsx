@@ -107,6 +107,8 @@ const Overviews = ({ tenant_profile, invoices, axiosConfig }) => {
 
   const [phoneNumber, setPhoneNumber] = useState();
 
+  
+
   const handleInitiatePayment = async (e) => {
     e.preventDefault();
     const data = {
@@ -114,7 +116,7 @@ const Overviews = ({ tenant_profile, invoices, axiosConfig }) => {
       invoice_id: viewedInvoice.id,
       amount: viewedInvoice.total_amount,
     };
-    let res = await fetch("http://127.0.0.1:8000/api/initiate-payment/", {
+    let res = await fetch( `${API_URL}/api/initiate-payment/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

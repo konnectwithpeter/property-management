@@ -16,10 +16,12 @@ import {
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { MapPin } from "lucide-react"; // Import MapPin from lucide-react
 import {Skeleton} from "@/components/ui/skeleton"; // Import your Skeleton component
+import { useContext } from "react";
+import APIContext from "../context/APIContext";
 
 export default function Listing({ data }) {
   const isLoading = !data || data.length === 0; // Determine if loading based on data availability
-
+ const {API_URL} = useContext(APIContext)
   return (
     <Card className="gap-4 w-full">
       <CardHeader>
@@ -58,7 +60,7 @@ export default function Listing({ data }) {
                               alt="Property image"
                               className="aspect-square rounded-md object-cover"
                               height="64"
-                              src={`http://127.0.0.1:8000${property.image1}`}
+                              src={`${API_URL}${property.image1}`}
                               width="64"
                             />
                           </TableCell>
@@ -87,7 +89,7 @@ export default function Listing({ data }) {
                               <div className="flex items-center gap-4">
                                 <Avatar className="hidden h-9 w-9 sm:flex">
                                   <AvatarImage
-                                    src={`http://127.0.0.1:8000${property.tenants[0].user.profile_picture}`}
+                                    src={`${API_URL}${property.tenants[0].user.profile_picture}`}
                                     alt="Avatar"
                                   />
                                   <AvatarFallback>
@@ -130,7 +132,7 @@ export default function Listing({ data }) {
                         <tr>
                           <td className="p-2 border">
                             <img
-                              src={`http://127.0.0.1:8000${property.image1}`}
+                              src={`${API_URL}${property.image1}`}
                               alt="Property"
                               className="w-16 h-16 object-cover rounded-lg"
                             />

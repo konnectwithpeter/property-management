@@ -5,10 +5,11 @@ import Navbar from "./Navbar";
 import TenantNotifications from "./Notifications";
 import Overviews from "./Overviews";
 import VacateNoticeForm from "./VacateNotice";
+import APIContext from "../context/APIContext";
 
 const TenantPage = () => {
   const [activePage, setActivePage] = useState("overview");
-
+  const {API_URL} = useContext(APIContext)
   const [tenantInfo, setTenantInfo] = useState([]);
   const [loading, setLoading] = useState(true);
   const { authTokens } = useContext(AuthContext);
@@ -24,7 +25,7 @@ const TenantPage = () => {
   const fetchTenantInfo = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/tenant-info/",
+        `${API_URL}/api/tenant-info/`,
         axiosConfig
       ); // Your Django API endpoint
       const data = await response.json();

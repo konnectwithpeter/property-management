@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AuthContext from "../context/AuthContext";
+import APIContext from "../context/APIContext";
 
 const Skeleton = ({ className }) => (
   <div className={`bg-gray-300 animate-pulse ${className}`} />
@@ -34,6 +35,7 @@ const MaintenanceRequestList = ({
         return <Badge className="bg-gray-500 text-white">Pending</Badge>;
     }
   };
+  const { API_URL} = useContext(APIContext);
 
   return (
     <>
@@ -117,21 +119,21 @@ const MaintenanceRequestList = ({
                   <div className="flex gap-2 mt-2">
                     {request.image1 && (
                       <img
-                        src={`http://127.0.0.1:8000${request.image1}`}
+                        src={`${API_URL}${request.image1}`}
                         alt="Maintenance request image 1"
                         className="w-20 h-20 object-cover rounded-md"
                       />
                     )}
                     {request.image2 && (
                       <img
-                        src={`http://127.0.0.1:8000${request.image2}`}
+                        src={`${API_URL}${request.image2}`}
                         alt="Maintenance request image 2"
                         className="w-20 h-20 object-cover rounded-md"
                       />
                     )}
                     {request.image3 && (
                       <img
-                        src={`http://127.0.0.1:8000${request.image3}`}
+                        src={`${API_URL}${request.image3}`}
                         alt="Maintenance request image 3"
                         className="w-20 h-20 object-cover rounded-md"
                       />
@@ -147,7 +149,7 @@ const MaintenanceRequestList = ({
                         controls
                       >
                         <source
-                          src={`http://127.0.0.1:8000${request.video}`}
+                          src={`${API_URL}${request.video}`}
                           type="video/mp4"
                         />
                         Your browser does not support the video tag.

@@ -14,9 +14,11 @@ import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ModeToggle } from "../components/ModeToggle";
 import AuthContext from "../context/AuthContext";
+import APIContext from "../context/APIContext";
 
 const Navbar = ({ setActivePage, activePage }) => {
   const navigate = useNavigate();
+
   const { logoutUser, user } = useContext(AuthContext);
   const [isSheetOpen, setIsSheetOpen] = useState(false); // Manage sheet open state
 
@@ -28,6 +30,7 @@ const Navbar = ({ setActivePage, activePage }) => {
     console.log(user);
   }
 
+  const {API_URL} = useContext(APIContext)
   return (
     <header
       className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-md"
@@ -107,7 +110,7 @@ const Navbar = ({ setActivePage, activePage }) => {
             <Button variant="secondary" size="icon" className="rounded-full">
               <Avatar>
                 <AvatarImage
-                  src={`http://127.0.0.1:8000${user.profile_picture}`}
+                  src={`${API_URL}${user.profile_picture}`}
                   alt={`${user.first_name} ${user.last_name}`}
                 />
                 <AvatarFallback>

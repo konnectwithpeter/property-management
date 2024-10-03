@@ -39,11 +39,13 @@ import { ModeToggle } from "../components/ModeToggle";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
 import Navbar from "./Navbar";
+import APIContext from "../context/APIContext";
 
 const LandlordPage = () => {
   const [properties, setProperties] = useState([]);
 
   let { authTokens, logoutUser } = useContext(AuthContext);
+  const {API_URL} = useContext(APIContext)
 
   let axiosConfig = {
     headers: {
@@ -54,7 +56,7 @@ const LandlordPage = () => {
 
   const fetchData = async () => {
     await axios
-      .get(`http://127.0.0.1:8000/api/landlord/`, axiosConfig)
+      .get(`${API_URL}/api/landlord/`, axiosConfig)
       .then((response) => {
         setProperties(response.data.properties);
       })
@@ -66,7 +68,7 @@ const LandlordPage = () => {
   const [allData, setAllData] = useState([]);
   const fetchAllData = async () => {
     await axios
-      .get(`http://127.0.0.1:8000/api/admin/properties/`, axiosConfig)
+      .get(`${API_URL}/api/admin/properties/`, axiosConfig)
       .then((response) => {
         setAllData(response.data);
         console.log(response.data);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,9 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
+import APIContext from "../context/APIContext";
 
 export default function RegisterForm() {
   const navigate = useNavigate();
+  const {API_URL} = useContext(APIContext)
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -63,7 +65,7 @@ export default function RegisterForm() {
       try {
         // Send registration data to backend
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/register/",
+          `${API_URL}/api/register/`,
           data,
           {
             headers: {

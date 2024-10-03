@@ -20,6 +20,7 @@ import { TrashIcon } from "lucide-react";
 import { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import MaintenanceRequestList from "./MaintenanceRequestList";
+import APIContext from "@/context/APIContext";
 
 const Maintenance = ({ currentProperty }) => {
   const [description, setDescription] = useState("");
@@ -32,6 +33,7 @@ const Maintenance = ({ currentProperty }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const { authTokens, user } = useContext(AuthContext);
 
+  const {API_URL} = useContext(APIContext)
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length <= 3) {
@@ -82,7 +84,7 @@ const Maintenance = ({ currentProperty }) => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/maintenance-requests/",
+          `${API_URL}/api/maintenance-requests/`,
         formData,
         {
           headers: {
@@ -119,7 +121,7 @@ const Maintenance = ({ currentProperty }) => {
   const fetchMaintenanceRequests = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/maintenance-requests/",
+        `${API_URL}/api/maintenance-requests/`,
         axiosConfig
       );
       setRequests(response.data); // Access the 'results' array from the paginated response

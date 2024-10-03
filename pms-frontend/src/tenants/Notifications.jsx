@@ -6,12 +6,14 @@ import AuthContext from "../context/AuthContext";
 import moment from "moment";
 import { Button } from "@/components/ui/button";
 import { Bell, CheckCircle, MailWarning } from "lucide-react";
+import APIContext from "../context/APIContext";
 
 const TenantNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
   const [notices, setNotices] = useState([]);
   const { authTokens } = useContext(AuthContext);
+  const {API_URL} = useContext(APIContext)
 
   const axiosConfig = {
     headers: {
@@ -22,7 +24,7 @@ const TenantNotifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/notifications/`, axiosConfig);
+      const response = await axios.get(`${API_URL}/api/notifications/`, axiosConfig);
       setNotices(response.data.results);
     } catch (error) {
       console.error(error);
@@ -35,7 +37,7 @@ const TenantNotifications = () => {
 
   const readNotification = async (notificationId) => {
     try {
-      await axios.patch(`http://127.0.0.1:8000/api/notifications-edit/`, { notification: notificationId }, axiosConfig);
+      await axios.patch(`${API_URL}/api/notifications-edit/`, { notification: notificationId }, axiosConfig);
       fetchNotifications();
     } catch (error) {
       console.error(error);

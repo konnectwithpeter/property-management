@@ -14,11 +14,13 @@ import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ModeToggle } from "../components/ModeToggle";
 import AuthContext from "../context/AuthContext";
+import APIContext from "../context/APIContext";
 
 const Navbar = ({ setActivePage, activePage }) => {
   const navigate = useNavigate();
   const { logoutUser, user } = useContext(AuthContext);
   const [isSheetOpen, setIsSheetOpen] = useState(false); // Manage sheet open state
+  const {API_URL} = useContext(APIContext);
 
   const handleLinkClick = (page) => {
     setActivePage(page); // Set the active page
@@ -109,7 +111,7 @@ const Navbar = ({ setActivePage, activePage }) => {
             <Button variant="secondary" size="icon" className="rounded-full">
               <Avatar>
                 <AvatarImage
-                  src={`http://127.0.0.1:8000${user.profile_picture}`}
+                  src={`${API_URL}${user.profile_picture}`}
                   alt={`${user.first_name} ${user.last_name}`}
                 />
                 <AvatarFallback>

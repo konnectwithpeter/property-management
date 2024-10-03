@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import APIContext from "../context/APIContext";
 
 const Maintenance = ({ maintenanceRequests, axiosConfig }) => {
   // State to store budgets for each request (using request ID as key)
@@ -31,12 +32,12 @@ const Maintenance = ({ maintenanceRequests, axiosConfig }) => {
       [id]: value, // Update the specific budget by request ID
     }));
   };
-
+  const { API_URL} = useContext(APIContext);
   // Function to handle the approve action, sending the correct budget per request
   const handleApprove = async (property, tenant, budget) => {
     try {
       const res = await axios.patch(
-        "http://127.0.0.1:8000/api/maintenance-requests/",
+        `${API_URL}/api/maintenance-requests/`,
         { property, tenant, budget },
         axiosConfig
       );
